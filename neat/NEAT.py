@@ -68,7 +68,7 @@ class NEAT:
         return connection
 
     def getConnection(self, innovation):
-        """Finds a connection within this genome based on the innovation number and returns it
+        """Finds a connection based on the innovation number and returns it
         
         Parameters:
             innovation (int): The innovation number of the ConnectionGene to get
@@ -109,6 +109,8 @@ class NEAT:
 if __name__ == "__main__":
     neat = NEAT(3, 3, Config)
 
-    genome = neat.empty_genome()
+    genome_a = neat.empty_genome()
+    genome_b = neat.empty_genome()
     
-    print(len(genome.nodes))
+    genome_a.compatibility(genome_b)
+    print('done')
