@@ -1,8 +1,13 @@
-"""
-"""
-
 class ConnectionGene:
-    """
+    """A class to define a connection between two nodes in a NEAT neural network
+
+    Attributes:
+        in_node (NodeGene): The node that this connection originates from
+        out_node (NodeGene): The node that this connection points to
+        weight (float): The weight of this connection
+        enabled (bool): Determines whether this node is used in a network
+        innovation (int): The innovation number of this connection
+        config (Config): The configuration 
     """
 
     def __init__(self, in_node, out_node, weight, enabled, config):
@@ -15,10 +20,12 @@ class ConnectionGene:
 
     def equals(self, object):
         """A method to determine if two ConnectionGenes are equal
-        inputs:
-            ConnectionGene object: ConnectionGene to compare with
-        outputs:
-            Boolean: If these two connections are the same
+        
+        Parameters:
+            object (ConnectionGene): ConnectionGene to compare with
+        
+        Returns:
+            equals (bool): If these two connections are the same
         """
         if not isinstance(object, ConnectionGene):
             return False
@@ -28,9 +35,8 @@ class ConnectionGene:
     def hash(self):
         """A method to generate a hash to tell if two ConnectionGenes have the same in and out nodes
         This could function as the innovation number however will not be able to give historical information (such as when an innovation was created)
-        inputs:
-            None
-        outputs:
-            string: A hashcode to represent this ConnectionGene
+
+        Returns:
+            hashcode (string): A hashcode to represent this ConnectionGene
         """
         return str(self.in_node.innovation * self.config.MAX_NODES + self.out_node.innovation)

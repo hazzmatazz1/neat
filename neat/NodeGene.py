@@ -1,8 +1,9 @@
-"""
-"""
-
 class NodeGene:
-    """
+    """A class to define a single node within a NEAT neural network
+
+    Attributes:
+        node_type (string): The type of node that this is (INPUT/HIDDEN/OUTPUT)
+        innovation (int): The innovation number of this node
     """
 
     TYPES = {
@@ -21,10 +22,12 @@ class NodeGene:
 
     def equals(self, object):
         """A method to determine if two NodeGenes have the same innovation number
-        inputs:
-            NodeGene object: NodeGene to compare with
-        outputs:
-            Boolean: If these two nodes have the same innovation number
+        
+        Parameters:
+            object (NodeGene): NodeGene to compare with
+        
+        Returns:
+            equals (bool): If these two nodes have the same innovation number
         """
         if not isinstance(object, NodeGene):
             return False
