@@ -11,7 +11,7 @@ class NEAT:
         all_nodes (dict): A dictionary which maps all nodes to an innovation number
         config (Config): A class for defining many different configuration parameters
     """
-    def __init__(self, input_size, output_size, config):
+    def __init__(self, input_size, output_size, config=Config()):
         self.all_connections = {}
         self.all_nodes = {}
         self.config = config

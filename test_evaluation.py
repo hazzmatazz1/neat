@@ -1,6 +1,6 @@
 import neat
     
-network = neat.NEAT(2, 1, neat.Config())
+network = neat.NEAT(2, 1)
 genome_a = network.empty_genome()
 
 inno_4 = genome_a.createNode('HIDDEN')
