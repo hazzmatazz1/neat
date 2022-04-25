@@ -195,7 +195,6 @@ class Genome:
             raise ValueError(f"genome_b: type must be Genome. Current type is {type(genome_b)}")
 
         # When checking compatibility genome_a must have the higher innovation number
-        print(genome_a.connections.keys(), genome_b.connections.keys())
         highest_innovation_a = list(genome_a.connections.keys())[-1]
         highest_innovation_b = list(genome_b.connections.keys())[-1]
 
@@ -312,4 +311,26 @@ class Genome:
         """
         return self._compatibilityCrossoverUtil(genome_a, genome_b, True)
 
-    
+    def evaluate(self):
+        """A function to evaluate the outputs of this genome
+        """
+        outputs = []
+        for node in self.nodes.values():
+            # Initialise all nodes output to 0
+            if node.node_type == 'INPUT':
+                continue
+            node.output = 0
+
+        # As there can be loops in the genome, we evaluate all connections multiple times to a value of n
+        # TAKE THIS OUT TO CONFIG PLEASE
+        for _ in range(self.neat.config.MAX_EVALUATIONS):
+            for connection in self.connections.values():
+                output = connection.in_node.output * connection.weight
+                connection.out_node.inputs.update({str(connection.innovation): output})
+                connection.out_node.evaluate()
+
+        for node in self.nodes.values():
+            if node.node_type == 'OUTPUT':
+                outputs.append(node.output)
+
+        return outputs

@@ -1,3 +1,5 @@
+import math
+
 class NodeGene:
     """A class to define a single node within a NEAT neural network
 
@@ -20,15 +22,19 @@ class NodeGene:
         
         self.node_type = node_type
 
-    def equals(self, object):
-        """A method to determine if two NodeGenes have the same innovation number
-        
-        Parameters:
-            object (NodeGene): NodeGene to compare with
-        
-        Returns:
-            equals (bool): If these two nodes have the same innovation number
-        """
-        if not isinstance(object, NodeGene):
-            return False
-        return self.innovation == object.innovation
+        # These variables are used for evaluation
+        if self.node_type == 'INPUT':
+            self.output = 1
+        else:
+            self.output = 0
+        self.inputs = {}
+
+    def sigmoidal_transfer(self, x):
+        return 1 / (1 + pow(math.e, -4.9*x))
+
+    def evaluate(self):
+        self.output = 0
+        for value in self.inputs.values():
+            self.output += value
+        self.output = self.sigmoidal_transfer(self.output)
+        return self.output

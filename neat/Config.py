@@ -49,3 +49,4 @@ class Config:
 
     #
     MAX_NODES = pow(2, 20)
+    MAX_EVALUATIONS = 30
