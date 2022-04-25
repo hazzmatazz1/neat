@@ -41,6 +41,6 @@ def drawGenome(genome):
     nx.draw_networkx_edges(graph, pos)
 
     nx.draw_networkx_labels(graph, pos)
-    #nx.draw_networkx_edge_labels(graph, pos, font_size=5)
+    nx.draw_networkx_edge_labels(graph, pos, font_size=5)
 
     plt.show()

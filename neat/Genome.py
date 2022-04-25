@@ -40,6 +40,7 @@ class Genome:
         if not isinstance(connection, ConnectionGene):
             raise ValueError(f"connection: type must be ConnectionGene. Current type is {type(connection)}")
         self.connections.update({str(connection.innovation): connection})
+        return connection
 
     def getConnection(self, innovation):
         """Finds a connection within this genome based on the innovation number and returns it
@@ -50,8 +51,8 @@ class Genome:
         Returns:
             connection (ConnectionGene): The connection found
         """
-        if innovation < len(self.connections):
-            return self.connections[str(innovation)]
+        if innovation in self.connections:
+            return self.connections.get(str(innovation))
         raise ValueError(f"Connection innovation number {innovation} does not exist.")
 
     def createNode(self, node_type):
@@ -76,6 +77,7 @@ class Genome:
         if not isinstance(node, NodeGene):
             raise ValueError(f"node: type must be NodeGene. Current type is {type(node)}")
         self.nodes.update({str(node.innovation): node})
+        return node
 
     def getNode(self, innovation):
         """Finds a node within this genome based on the innovation number and returns it
@@ -86,17 +88,34 @@ class Genome:
         Returns:
             node (NodeGene): The node found
         """
-        if innovation < len(self.nodes):
-            return self.nodes[str(innovation)]
+        if innovation in self.nodes:
+            return self.nodes.get(str(innovation))
         raise ValueError(f"NodeGene innovation number {innovation} does not exist.")
 
     def mutate(self):
-        """
+        """A method to perform mutations at random on this genome
         """
         # Mutate weights or structure
-        pass
+        for connection in self.connections:
+            if self.neat.config.MUTATE_WEIGHTS > random.random():
+                # Mutate
+                if self.neat.config.MUTATE_WEIGHTS_SHIFT > random.random():
+                    self.mutate_weight_shift(connection)
+                else:
+                    self.mutate_weight_random(connection)
+
+        if self.neat.config.MUTATE_ADD_CONNECTION > random.random():
+            # Add a new connection
+            self.mutate_connection()
+
+        # Do mutate node after to create a very small chance for a connection to be created and split in a single mutation
+        if self.neat.config.MUTATE_ADD_NODE > random.random():
+            # Add a new node
+            self.mutate_node()
 
     def mutate_connection(self):
+        """A method to add a new random connection to this genome
+        """
         for _ in range(100):
             node_a = random.choice(list(self.nodes.values()))
             node_b = random.choice(list(self.nodes.values()))
@@ -106,14 +125,9 @@ class Genome:
             if node_a == node_b:
                 continue
 
-            if node_a.node_type == 'OUTPUT':
-                # linking an output to an input is bad
+            if node_a.node_type == 'OUTPUT' or node_b.node_type == 'INPUT':
+                # linking an output to anything or anything to an input is not allowed
                 continue
-
-            if node_a.node_type == node_b.node_type and node_a.node_type in ['INPUT', 'OUTPUT']:
-                # linking an input to an input or an output to an output
-                continue
-
 
             hashcode_a = node_a.innovation * self.neat.config.MAX_NODES + node_b.innovation
             hashcode_b = node_b.innovation * self.neat.config.MAX_NODES + node_a.innovation
@@ -127,6 +141,11 @@ class Genome:
             return self.createConnection(node_a, node_b, weight)
 
     def mutate_node(self):
+        """A method to split a random connection and add a node in the middle to this genome
+        """
+        if len(self.connections) == 0:
+            # No connections to split so exit
+            return
         connection = random.choice(list(self.connections.values()))
         if not connection or not connection.enabled:
             return
@@ -142,19 +161,22 @@ class Genome:
         connection.enabled = False
 
     def mutate_weight_shift(self, connection):
-        #connection = random.choice([self.connections.values()])
-        if connection:
+        """A method to randomly shift a weight of a connection
+
+        Parameters:
+            connection (ConnectionGene): The connection to be weight shifted
+        """
+        if isinstance(connection, ConnectionGene):
             connection.weight += random.uniform(-1, 1) * self.neat.config.MUTATE_WEIGHTS_SHIFT_STRENGTH
 
     def mutate_weight_random(self, connection):
-        #connection = random.choice([self.connections.values()])
-        if connection:
-            connection.weight = random.uniform(-1, 1) * self.neat.config.MUTATE_WEIGHTS_RANDOM_STRENGTH
+        """A method to randomly set a weight of a connection
 
-    def mutate_connection_toggle(self, connection):
-        #connection = random.choice([self.connections.values()])
-        if connection:
-            connection.enabled = not connection.enabled
+        Parameters:
+            connection (ConnectionGene): The connection to randomise the weight
+        """
+        if isinstance(connection, ConnectionGene):
+            connection.weight = random.uniform(-1, 1) * self.neat.config.MUTATE_WEIGHTS_RANDOM_STRENGTH
 
     def _compatibilityCrossoverUtil(self, genome_a, genome_b, crossover=False):
         """As both compatibility checks and crossover need to do similar functionality, it has been brought here to avoid duplications
@@ -173,16 +195,17 @@ class Genome:
             raise ValueError(f"genome_b: type must be Genome. Current type is {type(genome_b)}")
 
         # When checking compatibility genome_a must have the higher innovation number
-        highest_innovation_a = list(genome_a.connections.keys()).sort()[-1]
-        highest_innovation_b = list(genome_b.connections.keys()).sort()[-1]
+        print(genome_a.connections.keys(), genome_b.connections.keys())
+        highest_innovation_a = list(genome_a.connections.keys())[-1]
+        highest_innovation_b = list(genome_b.connections.keys())[-1]
 
         if not crossover and highest_innovation_a < highest_innovation_b:
             # Swap genomes over so genome_a has a higher maximum innovation number
             genome_a, genome_b = genome_b, genome_a
 
         # Need a list of the keys sorted by ascending order so that both genomes can be checked against each other
-        genome_a_keys = list(genome_a.connections.keys()).sort()
-        genome_b_keys = list(genome_b.connections.keys()).sort()
+        genome_a_keys = list(genome_a.connections.keys())
+        genome_b_keys = list(genome_b.connections.keys())
 
         # Keep track of an index for each to loop through and match genes in the genomes
         index_a = 0
@@ -213,14 +236,21 @@ class Genome:
 
                 if innovation_a == innovation_b:
                     # Similar Gene - take at random from either parent
+                    enabled = True
+                    if (not gene_a.enabled or not gene_b.enabled) and self.neat.config.INHERIT_DISABLED > random.random():
+                        # If either parent has this gene disabled, have a set chance for it to be disabled
+                        enabled = False
                     if random.random() < 0.5:
-                        child.addConnection(copy.deepcopy(gene_a))
+                        connection = child.addConnection(copy.deepcopy(gene_a))
+                        connection.enabled = enabled
                     else:
-                        child.addConnection(copy.deepcopy(gene_b))
+                        connection = child.addConnection(copy.deepcopy(gene_b))
+                        connection.enabled = enabled
                     index_a += 1
                     index_b += 1
                 elif innovation_a > innovation_b:
                     # Disjoint of b (ignored in crossover)
+                    #child.addConnection(copy.deepcopy(gene_b))
                     index_b += 1
                 else:
                     # Disjoint of a - make sure to include in child
@@ -246,6 +276,8 @@ class Genome:
         if crossover:
             # Copy the excess genes from genome_a
             while index_a < len(genome_a.connections):
+                innovation_a = genome_a_keys[index_a]
+                gene_a = genome_a.getConnection(innovation_a)
                 child.addConnection(copy.deepcopy(gene_a))
                 index_a += 1
 
@@ -273,11 +305,11 @@ class Genome:
                 OR
             species (bool): Representing if these genomes are part of the same species
         """
-        self._compatibilityCrossoverUtil(self, genome, False)
+        return self._compatibilityCrossoverUtil(self, genome, False)
 
     def crossover(self, genome_a, genome_b):
         """
         """
-        self._compatibilityCrossoverUtil(genome_a, genome_b, True)
+        return self._compatibilityCrossoverUtil(genome_a, genome_b, True)
 
     

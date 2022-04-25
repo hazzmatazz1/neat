@@ -44,7 +44,7 @@ class NEAT:
         """
         genome = Genome(self)
         for i in range(self.input_size + self.output_size):
-            genome.addNode(self.getNode(i))
+            genome.addNode(self.getNode(i+1))
         return genome
 
     def createConnection(self, in_node, out_node, weight=1):
@@ -87,7 +87,7 @@ class NEAT:
         Returns:
             node (NodeGene): The node created
         """
-        node = NodeGene(node_type, len(self.all_nodes))
+        node = NodeGene(node_type, len(self.all_nodes)+1)
         self.all_nodes.update({str(node.innovation): node})
         return node
 
@@ -100,7 +100,4 @@ class NEAT:
         Returns:
             node (NodeGene): The node found
         """
-        if innovation < len(self.all_nodes):
-            return self.all_nodes.get(str(innovation))
-        #raise ValueError(f"Node innovation number {innovation} does not exist.")
-        return None
+        return self.all_nodes.get(str(innovation), None)
