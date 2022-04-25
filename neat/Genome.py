@@ -315,8 +315,8 @@ class Genome:
         """A function to evaluate the outputs of this genome
         """
         # Initialise previous outputs to be different from new_outputs so that the while loop runs once
-        previous_outputs = ['xyz']
-        new_outputs = []
+        previous_outputs = {'xyz': 1}
+        new_outputs = {}
         
         for node in self.nodes.values():
             # Initialise all nodes output to 0
@@ -331,7 +331,7 @@ class Genome:
             iterations += 1
 
             previous_outputs = new_outputs
-            new_outputs = []
+            new_outputs = {}
 
             for connection in self.connections.values():
                 if not connection.enabled:
@@ -341,7 +341,7 @@ class Genome:
                 connection.out_node.inputs.update({str(connection.innovation): output})
                 evaluated = connection.out_node.evaluate()
                 if connection.out_node.node_type == 'OUTPUT':
-                    new_outputs.append(evaluated)
+                    new_outputs.update({str(connection.out_node.innovation): evaluated})
 
             print(new_outputs)
 
