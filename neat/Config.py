@@ -5,8 +5,10 @@ C3 = Weighting for Weight Difference in compatibility function
 COMPATIBILITY_THRESHOLD = Compatibility Threshold
 
 MUTATE_WEIGHTS = The chance for the weights of a genome to be mutated
-MUTATE_WEIGHTS_UNIFORM = The chance for a weight to be mutated uniformly
+MUTATE_WEIGHTS_SHIFT = The chance for a weight to be mutated uniformly
 MUTATE_WEIGHTS_RANDOM = The chance for a weight to be mutated randomly
+MUTATE_WEIGHTS_SHIFT_STRENGTH = How strong is the weight shift mutation
+MUTATE_WEIGHTS_RANDOM_STRENGTH = How strong is the random weight mutation
 MUTATE_ADD_NODE = The chance for a genome to add a new node
 MUTATE_ADD_CONNECTION = The chance for a genome to add a new connection between two nodes
 
@@ -29,8 +31,10 @@ class Config:
 
     # Mutation
     MUTATE_WEIGHTS = 0.8
-    MUTATE_WEIGHTS_UNIFORM = 0.9
+    MUTATE_WEIGHTS_SHIFT = 0.9
     MUTATE_WEIGHTS_RANDOM = 0.1
+    MUTATE_WEIGHTS_SHIFT_STRENGTH = 0.3
+    MUTATE_WEIGHTS_RANDOM_STRENGTH = 1
     MUTATE_ADD_NODE = 0.03
     MUTATE_ADD_CONNECTION = 0.05
 

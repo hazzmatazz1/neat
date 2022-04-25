@@ -1,7 +1,7 @@
-from NodeGene import NodeGene
-from ConnectionGene import ConnectionGene
-from Genome import Genome
-from Config import Config
+from .NodeGene import NodeGene
+from .ConnectionGene import ConnectionGene
+from .Genome import Genome
+from .Config import Config
 
 class NEAT:
     """A class to manage many functions of NEAT algorithm such as the connections and nodes 
@@ -47,7 +47,7 @@ class NEAT:
             genome.addNode(self.getNode(i))
         return genome
 
-    def createConnection(self, in_node, out_node):
+    def createConnection(self, in_node, out_node, weight=1):
         """A method to create a new ConnectionGene. This first checks if the ConnectionGene already exists
         
         Parameters:
@@ -57,7 +57,7 @@ class NEAT:
         Returns:
             connection (ConnectionGene): The connection created between the in and out nodes
         """
-        connection = ConnectionGene(in_node, out_node, 1, True, self.config)
+        connection = ConnectionGene(in_node, out_node, weight, True, self.config)
 
         if connection.hash() in self.all_connections:
             connection.innovation = self.all_connections.get(connection.hash()).innovation
@@ -67,7 +67,7 @@ class NEAT:
 
         return connection
 
-    def getConnection(self, innovation):
+    def getConnection(self, hashcode):
         """Finds a connection based on the innovation number and returns it
         
         Parameters:
@@ -76,9 +76,7 @@ class NEAT:
         Returns:
             connection (ConnectionGene): The connection found
         """
-        if innovation < len(self.all_connections):
-            return self.all_connections[innovation]
-        raise ValueError(f"Connection innovation number {innovation} does not exist.")
+        return self.all_connections.get(str(hashcode), None)
 
     def createNode(self, node_type):
         """Creates a new node
@@ -104,13 +102,5 @@ class NEAT:
         """
         if innovation < len(self.all_nodes):
             return self.all_nodes.get(str(innovation))
-        raise ValueError(f"Node innovation number {innovation} does not exist.")
-        
-if __name__ == "__main__":
-    neat = NEAT(3, 3, Config)
-
-    genome_a = neat.empty_genome()
-    genome_b = neat.empty_genome()
-    
-    genome_a.compatibility(genome_b)
-    print('done')
+        #raise ValueError(f"Node innovation number {innovation} does not exist.")
+        return None

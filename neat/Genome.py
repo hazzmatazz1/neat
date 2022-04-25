@@ -1,5 +1,5 @@
-from NodeGene import NodeGene
-from ConnectionGene import ConnectionGene
+from .NodeGene import NodeGene
+from .ConnectionGene import ConnectionGene
 
 import copy
 import random
@@ -17,7 +17,7 @@ class Genome:
         self.nodes = {}
         self.neat = neat
 
-    def createConnection(self, in_node, out_node):
+    def createConnection(self, in_node, out_node, weight):
         """Creates a new connection between two specified nodes
         
         Parameters:
@@ -27,7 +27,7 @@ class Genome:
         Returns:
             connection (ConnectionGene): The connection created between the in and out nodes
         """
-        connection = self.neat.createConnection(in_node, out_node)
+        connection = self.neat.createConnection(in_node, out_node, weight)
         self.connections.update({str(connection.innovation): connection})
         return connection
 
@@ -95,6 +95,66 @@ class Genome:
         """
         # Mutate weights or structure
         pass
+
+    def mutate_connection(self):
+        for _ in range(100):
+            node_a = random.choice(list(self.nodes.values()))
+            node_b = random.choice(list(self.nodes.values()))
+
+            #print(node_a, node_b)
+
+            if node_a == node_b:
+                continue
+
+            if node_a.node_type == 'OUTPUT':
+                # linking an output to an input is bad
+                continue
+
+            if node_a.node_type == node_b.node_type and node_a.node_type in ['INPUT', 'OUTPUT']:
+                # linking an input to an input or an output to an output
+                continue
+
+
+            hashcode_a = node_a.innovation * self.neat.config.MAX_NODES + node_b.innovation
+            hashcode_b = node_b.innovation * self.neat.config.MAX_NODES + node_a.innovation
+
+            if self.neat.getConnection(hashcode_a) or self.neat.getConnection(hashcode_b):
+                # a link already exists between these two nodes
+                continue
+
+            weight = random.uniform(-1, 1) * self.neat.config.MUTATE_WEIGHTS_RANDOM_STRENGTH
+            
+            return self.createConnection(node_a, node_b, weight)
+
+    def mutate_node(self):
+        connection = random.choice(list(self.connections.values()))
+        if not connection or not connection.enabled:
+            return
+
+        in_node = connection.in_node
+        out_node = connection.out_node
+
+        middle_node = self.createNode('HIDDEN')
+
+        connection_in_mid = self.createConnection(in_node, middle_node, 1)
+        connection_mid_out = self.createConnection(middle_node, out_node, connection.weight)
+
+        connection.enabled = False
+
+    def mutate_weight_shift(self, connection):
+        #connection = random.choice([self.connections.values()])
+        if connection:
+            connection.weight += random.uniform(-1, 1) * self.neat.config.MUTATE_WEIGHTS_SHIFT_STRENGTH
+
+    def mutate_weight_random(self, connection):
+        #connection = random.choice([self.connections.values()])
+        if connection:
+            connection.weight = random.uniform(-1, 1) * self.neat.config.MUTATE_WEIGHTS_RANDOM_STRENGTH
+
+    def mutate_connection_toggle(self, connection):
+        #connection = random.choice([self.connections.values()])
+        if connection:
+            connection.enabled = not connection.enabled
 
     def _compatibilityCrossoverUtil(self, genome_a, genome_b, crossover=False):
         """As both compatibility checks and crossover need to do similar functionality, it has been brought here to avoid duplications
